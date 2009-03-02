@@ -20,8 +20,13 @@ def vendor_index(request):
 
 def vendor_detail(request, slug):
     vendor=Vendor.public_objects.get(slug__exact=slug)
+    if request.META['SERVER_NAME']=='castinefarmersmarket.org':
+        google_api_key=settings.GOOGLE_API_KEY_CFM
+    elif request.META['SERVER_NAME']=='castinefm.org':
+        google_api_key=settings.GOOGLE_API_KEY_FM
+    else:
+        google_api_key=''
 
-    google_api_key=settings.GOOGLE_API_KEY
     return render_to_response('vendors/vendor_detail.html', locals(),
                               context_instance=RequestContext(request))
 
