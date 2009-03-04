@@ -12,7 +12,7 @@ import urllib
 import settings
 
 def get_lat_long(location):
-    key = settings.GOOGLE_API_KEY
+    key = settings.GOOGLE_API_KEY_CFM
     output = "csv"
     location = urllib.quote_plus(location)
     request = "http://maps.google.com/maps/geo?q=%s&output=%s&key=%s" % (location, output, key)
