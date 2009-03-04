@@ -8,7 +8,7 @@ from django.db.models import TextField
 class VendorForm(ModelForm):
     class Meta:
         model=Vendor
-        exclude=('public','owner', 'slug','lat_long')
+        exclude=('public','owner', 'markets', 'slug','lat_long')
         
 class MarketSignUpForm(ModelForm):
     #cal = Calendar.objects.get(slug__exact='castine-farmers-market')
