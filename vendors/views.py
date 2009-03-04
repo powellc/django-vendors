@@ -14,12 +14,12 @@ from django.conf import settings
 import datetime
 
 def vendor_index(request):
-    vendors=Vendor.objects.filter(public=True)
+    vendors=Vendor.public_objects.all()
     return render_to_response('vendors/vendor_index.html', locals(),
                               context_instance=RequestContext(request))
 
 def vendor_detail(request, slug):
-    vendor=Vendor.public_objects.get(slug__exact=slug)
+    vendor=Vendor.objects.get(slug__exact=slug)
     if request.META['SERVER_NAME']=='castinefarmersmarket.org':
         google_api_key=settings.GOOGLE_API_KEY_CFM
     elif request.META['SERVER_NAME']=='castinefm.org':
