@@ -64,7 +64,7 @@ class Vendor(StandardMetadata):
     products=TagField()
     markets=models.ManyToManyField(Event, null=True, blank=True)
     public=models.BooleanField(_('public'), default=False)
-    organic=models.BooleanField(_('certified organic'), default=False)
+    #organic=models.BooleanField(_('certified organic'), default=False)
     lat_long=models.CharField(_('coordinates'), max_length=255)
     
     objects=models.Manager()
