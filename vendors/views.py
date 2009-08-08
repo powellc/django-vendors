@@ -20,10 +20,10 @@ def vendor_index(request):
 
 def vendor_detail(request, slug):
     if request.user.is_authenticated():
-        vendor=Vendor.objects.get(slug__exact=slug)
+        vendor=Vendor.objects.get_object_or_404(slug__exact=slug)
     else:
         try:
-            vendor=Vendor.public_objects.get(slug__exact=slug)
+            vendor=Vendor.public_objects.get_object_or_404(slug__exact=slug)
         except:
             pass
 
