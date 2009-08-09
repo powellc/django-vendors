@@ -20,12 +20,15 @@ def vendor_index(request):
 
 def vendor_detail(request, slug):
     if request.user.is_authenticated():
-        vendor=Vendor.objects.get_object_or_404(slug__exact=slug)
+	try:
+       	    vendor=Vendor.objects.get(slug__exact=slug)
+        except:
+ 	    raise Http404
     else:
         try:
-            vendor=Vendor.public_objects.get_object_or_404(slug__exact=slug)
+            vendor=Vendor.public_objects.get(slug__exact=slug)
         except:
-            pass
+            raise Http404
 
     if request.META['SERVER_NAME']=='castinefarmersmarket.org':
         google_api_key=settings.GOOGLE_API_KEY_CFM
