@@ -1,4 +1,16 @@
-Vendors
-=======
+==============
+Django Vendors
+==============
+
+Overview
+--------
 
 A django application for managing vendors at a farmer's, or other kind of, market.
+
+Dependencies
+------------
+
+One part of the app requires django-schedule to work propertly. This can be circumvented quite easily by commenting out the appropriate parts of the models.py and views.py files.
+
+Each vendor can sign up for an "Event," which is supposed to be a market day, but could be anything.
+
