@@ -10,7 +10,6 @@ from django.template.defaultfilters import slugify
 from tagging.models import Tag, TaggedItem
 from django.conf import settings
 
-
 import datetime
 
 def vendor_index(request):
@@ -100,3 +99,13 @@ def vendor_signup(request, slug):
         
     return render_to_response('vendors/vendor_signup.html', locals(),
                               context_instance=RequestContext(request))
+
+@login_required
+def vendor_app_create(request):
+	form=VendorAppForm(request.POST or None)
+	if form.is_valid():
+		application=form.sav(commit=False)
+		return HttpResponseRedirect(reverse('vendor_app_detail', args=[application.vendor.slug]))
+
+	return render_to_response('vendors/vendor_app_create.html', locals(),
+								context_instance=RequestContext(request))
