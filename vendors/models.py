@@ -67,9 +67,9 @@ class Vendor(TimeStampedModel):
     markets=models.ManyToManyField(Event, null=True, blank=True)
     public=models.BooleanField(_('public'), default=False)
     lat_long=models.CharField(_('coordinates'), max_length=255)
-	committee_member=models.BooleanField(_('committee member'), default=False)
-	insurance_on_file=models.BooleanField(_('insurance on file'), default=False)
-	signed_bylaws=models.BooleanField(_('signed bylaws'), default=False)
+    committee_member=models.BooleanField(_('committee member'), default=False)
+    insurance_on_file=models.BooleanField(_('insurance on file'), default=False)
+    signed_bylaws=models.BooleanField(_('signed bylaws'), default=False)
     
     objects=models.Manager()
     public_objects=PublicManager()
@@ -120,9 +120,9 @@ class ApplicationStatus(models.Model):
 		return u'%s' % self.name
 
 class Application(TimeStampedModel):
-	vendor=models.ForeignKey(Vendor)
-	status=models.ForeignKey(ApplicationStatus)
-	submission_date=DateTimeField(default=datetime.now())
+    vendor=models.ForeignKey(Vendor)
+    status=models.ForeignKey(ApplicationStatus)
+    submission_date=DateTimeField(default=datetime.now())
     approval_date=DateTimeField(blank=True, null=True)
 
 	class Meta:
