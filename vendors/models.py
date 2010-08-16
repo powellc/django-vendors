@@ -63,7 +63,7 @@ class Vendor(TimeStampedModel):
     zipcode=ZipCodeField(_('zip'), max_length=5)
     description=models.TextField()
     products=TagField()
-	type=models.ManyToManyField(VendorType)
+    type=models.ManyToManyField(VendorType)
     markets=models.ManyToManyField(Event, null=True, blank=True)
     public=models.BooleanField(_('public'), default=False)
     lat_long=models.CharField(_('coordinates'), max_length=255)
@@ -108,16 +108,16 @@ class ApplicationStatus(models.Model):
 
 	   i.e. Approved, Pending, Denied, ... """
 
-	name=models.CharField(_('name'), max_length=50)
-	slug=models.SlugField(_('slug'), unique=True)
+    name=models.CharField(_('name'), max_length=50)
+    slug=models.SlugField(_('slug'), unique=True)
     
     class Meta:
-		verbose_name=_('application status')
-		verbose_name_plural=_('application statuses')
-		ordering=('name',)
+        verbose_name=_('application status')
+       	verbose_name_plural=_('application statuses')
+        ordering=('name',)
   
     def __unicode__(self):
-		return u'%s' % self.name
+        return u'%s' % self.name
 
 class Application(TimeStampedModel):
     vendor=models.ForeignKey(Vendor)
@@ -126,14 +126,14 @@ class Application(TimeStampedModel):
     approval_date=DateTimeField(blank=True, null=True)
 
 	class Meta:
-		verbose_name=_('application')
-		verbose_name_plural=_('applications')
-		ordering=('vendor', 'submission_date',)
-		get_latest_by='created'
+        verbose_name=_('application')
+        verbose_name_plural=_('applications')
+        ordering=('vendor', 'submission_date',)
+        get_latest_by='created'
 		
 	def __unicode__(self):
-		return u'%s %s application' % (self.vendor, self.submission_date.year)
+        return u'%s %s application' % (self.vendor, self.submission_date.year)
 
 	def get_absolute_url(self):
-		args=[self.vendor.slug]
-		return reverse('vendor_application_detail', args=args)
+        args=[self.vendor.slug]
+        return reverse('vendor_application_detail', args=args)
