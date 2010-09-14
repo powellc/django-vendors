@@ -101,11 +101,39 @@ def vendor_signup(request, slug):
                               context_instance=RequestContext(request))
 
 @login_required
+def app_index(request):
+    apps = Application.objects.all()
+	return render_to_response('vendors/app_index.html', locals(),
+								context_instance=RequestContext(request))
+@login_required
 def vendor_app_create(request):
 	form=VendorAppForm(request.POST or None)
 	if form.is_valid():
-		application=form.sav(commit=False)
-		return HttpResponseRedirect(reverse('vendor_app_detail', args=[application.vendor.slug]))
+	    app=form.save(commit=False)
+	    # Create a new application status object and set it to Pending
+        status=ApplicationStatus.objects.create(application=app, status='P')
+        status.save()
+		app.save()
+		return HttpResponseRedirect(reverse('vendor_app_detail', args=[app.vendor.slug, app.submission_date.year]))
 
 	return render_to_response('vendors/vendor_app_create.html', locals(),
 								context_instance=RequestContext(request))
+								
+@login_required
+def vendor_app_edit(request, slug, year):
+    instance = None
+    if slug is not None:
+        if year is not None:
+            instance = Application.objects.get(slug__exact=slug, submission_date__year=year)
+        
+    if request.method == 'POST':
+        form=VendorAppForm(request.POST, instance=instance)
+        if form.is_valid():
+            app=form.save()
+            return HttpResponseRedirect(reverse('vendor_app_detail', args=[app.vendor.slug, app.submission_date.year]))
+    else:
+        form = VendorAppForm(instance=instance)
+        
+    return render_to_response('vendors/vendor_app_edit.html', locals(),
+                              context_instance=RequestContext(request))
+    

@@ -1,4 +1,4 @@
-from vendors.models import Vendor
+from vendors.models import Vendor, Application
 from django.contrib import admin
 
 class VendorAdmin(admin.ModelAdmin):
@@ -10,3 +10,11 @@ class VendorAdmin(admin.ModelAdmin):
     date_hierarchy='created'
     
 admin.site.register(Vendor, VendorAdmin)
+
+class ApplicationAdmin(admin.ModelAdmin):
+    list_display  = ['vendor', 'submission_date', 'created', 'updated']
+    list_filter   = ['insurance_on_file', 'bylaws_signed', 'reapplying']
+    ordering = ['-submission_date']
+    date_hierarchy='submission_date'
+    
+admin.site.register(Application, ApplicationAdmin)

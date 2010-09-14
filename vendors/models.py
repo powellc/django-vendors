@@ -68,8 +68,6 @@ class Vendor(TimeStampedModel):
     public=models.BooleanField(_('public'), default=False)
     lat_long=models.CharField(_('coordinates'), max_length=255)
     committee_member=models.BooleanField(_('committee member'), default=False)
-    insurance_on_file=models.BooleanField(_('insurance on file'), default=False)
-    signed_bylaws=models.BooleanField(_('signed bylaws'), default=False)
     
     objects=models.Manager()
     public_objects=PublicManager()
@@ -94,8 +92,7 @@ class Vendor(TimeStampedModel):
         return u'%s in %s' % (self.name, self.town)
         
     def get_absolute_url(self):
-        args=[self.slug]
-        return reverse('vendor_detail', args=args)
+        return u'%s/' % (self.slug)
         
     def get_previous_vendor(self):
         return self.get_previous_by_name(public=True)
@@ -103,37 +100,46 @@ class Vendor(TimeStampedModel):
     def get_next_vendor(self):
         return self.get_next_by_name(public=True)
 
-class ApplicationStatus(models.Model):
-	"""Application status model.
-
-	   i.e. Approved, Pending, Denied, ... """
-
-    name=models.CharField(_('name'), max_length=50)
-    slug=models.SlugField(_('slug'), unique=True)
-    
-    class Meta:
-        verbose_name=_('application status')
-       	verbose_name_plural=_('application statuses')
-        ordering=('name',)
-  
-    def __unicode__(self):
-        return u'%s' % self.name
 
 class Application(TimeStampedModel):
-    vendor=models.ForeignKey(Vendor)
-    status=models.ForeignKey(ApplicationStatus)
-    submission_date=DateTimeField(default=datetime.now())
-    approval_date=DateTimeField(blank=True, null=True)
+    vendor=models.ForeignKey(Vendor, unique_for_year="submission_date")
+    submission_date=models.DateField(default=datetime.now())
+    approval_date=models.DateField(blank=True, null=True)
+    reapplying=models.BooleanField(_('reapplying'), default=False)
+    signed_bylaws=models.BooleanField(_('signed bylaws'), default=False)
+    insurance_on_file=models.BooleanField(_('insurance on file'), default=False)
 
 	class Meta:
         verbose_name=_('application')
         verbose_name_plural=_('applications')
         ordering=('vendor', 'submission_date',)
-        get_latest_by='created'
+        get_latest_by='submission_date'
 		
 	def __unicode__(self):
         return u'%s %s application' % (self.vendor, self.submission_date.year)
 
 	def get_absolute_url(self):
-        args=[self.vendor.slug]
-        return reverse('vendor_application_detail', args=args)
+        return u'%s/applications/%s/' %s (self.vendor.slug, self.submission_date.year)
+
+        STATUS_OPTIONS={
+            ('P', 'Pending'),
+            ('A', 'Approved'),
+            ('D', 'Denied'),
+        }
+
+class ApplicationStatus(models.Model):
+	"""Application status model.
+
+	   i.e. Approved, Pending, Denied, ... """
+
+    status=models.CharField(_('status'), max_length=1, options=STATUS_OPTIONS, default='P')
+    application=models.ForeignKey(Application)
+    explanation=models.TextField(_('explanation'), blank=True, null=True)
+
+    class Meta:
+        verbose_name=_('application status')
+       	verbose_name_plural=_('application statuses')
+        ordering=('name',)
+
+    def __unicode__(self):
+        return u'%s' % self.name
