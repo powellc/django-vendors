@@ -1,0 +1,18 @@
+{% extends "vendors/base.html" %}
+
+{% block title %}Create your profile{% endblock %}
+
+{% block content %}
+    <h1>{% block content_title %}Create your vendor profile{% endblock %}</h1>
+    <form method="POST" action="">
+    <table>
+        {{form.as_table}}
+    </table>
+
+    <p>Products should be a list of words separated by commas.</p>
+    <p class="em">To finish your registration, please send or fax a copy of your liability insurance policy to the Town Office (<a href="http://castine.me.us">castine.me.us</a>). We require vendors to carry at least $400,000 on their policy in order to have the market on town property. Thanks for your understanding.</p>
+    <p>Please note, your profile will be approved before being made public. If there are any problems we will contact you via the email or phone number you provide. Thank you for registering!</p>
+
+    <input type="submit" value="Create profile" />
+    </form>
+{% endblock %}

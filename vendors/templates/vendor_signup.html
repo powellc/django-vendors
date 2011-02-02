@@ -1,0 +1,14 @@
+{% extends "vendors/base.html" %}
+
+{% block title %}Signup for market days.{% endblock %}
+
+{% block content %}
+    <h1>{% block content_title %}Signup for market days.{% endblock %}</h1>
+    <h2>{{instance.name}}</h2>
+    <form method="POST" action="">
+    <ul>
+        {{form.as_ul}}
+    </ul>
+    <input type="submit" value="Update your schedule" /> or <a href="{% url vendor_detail instance.slug %}" title="{{instance.name}}">cancel</a>
+    </form>
+{% endblock %}

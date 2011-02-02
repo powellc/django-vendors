@@ -1,0 +1,17 @@
+{% extends "vendors/base.html" %}
+{% load markup typogrify comments humanize blog %}
+
+{% block body_class %}{{ block.super }} vendor_tag_list{% endblock %}
+
+{% block content %}
+    <h1>{% block content_title %}Vendor products{% endblock %}</h1>
+    <div class="tag-cloud">
+    {% load tagging_tags %}
+    {% tag_cloud_for_model vendors.Vendor as tags with steps=6 distribution=log %}
+    {% for tag in tags %}
+    <span class="tag-{{tag.font_size|add:"2"}}"><a href="{% url vendors_with_tag tag.name %}">{{tag.name}}</a></span> 
+    {% endfor %}
+    </div>
+{% endblock %}
+
+
