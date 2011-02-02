@@ -39,6 +39,7 @@ class VendorType(models.Model):
 	   Produce, Jewelry, Pottery, Meat, Cheese, etc...?"""
 
     name=models.CharField(_('name'), max_length=50)
+	craft=models.BooleanField(_('Craft'), default=False)
 	slug=models.SlugField(_('slug'), unique=True)
     
     class Meta:
@@ -65,7 +66,6 @@ class Vendor(TimeStampedModel):
     products=TagField()
     type=models.ManyToManyField(VendorType)
     markets=models.ManyToManyField(Event, null=True, blank=True)
-    public=models.BooleanField(_('public'), default=False)
     lat_long=models.CharField(_('coordinates'), max_length=255)
     committee_member=models.BooleanField(_('committee member'), default=False)
     
@@ -91,12 +91,23 @@ class Vendor(TimeStampedModel):
     def __unicode__(self):
         return u'%s in %s' % (self.name, self.town)
         
-    def get_absolute_url(self):
-        return u'%s/' % (self.slug)
+    @property
+    def public(self):
+        app = self.application_set.all().latest()
+        if app.signed_bylaws & app.insurance_on_file & app.approved:
+            return True
+        else:
+            return False
         
+    @property
+    def get_absolute_url(self):
+        return u'%s' % (self.slug)
+        
+    @property
     def get_previous_vendor(self):
         return self.get_previous_by_name(public=True)
-
+    
+    @property
     def get_next_vendor(self):
         return self.get_next_by_name(public=True)
 
@@ -112,22 +123,33 @@ class Application(TimeStampedModel):
 	class Meta:
         verbose_name=_('application')
         verbose_name_plural=_('applications')
-        ordering=('vendor', 'submission_date',)
+        ordering=('submission_date', 'vendor')
         get_latest_by='submission_date'
-		
+
+    @property
+    def status(self):
+        return self.applicationstatus_set.all().latest()
+
+    @property
+    def approved(self):
+        if self.applicationstatus_set.all().latest() == "A":
+            return True
+        else:
+            return False
+    
 	def __unicode__(self):
         return u'%s %s application' % (self.vendor, self.submission_date.year)
 
 	def get_absolute_url(self):
         return u'%s/applications/%s/' %s (self.vendor.slug, self.submission_date.year)
 
-        STATUS_OPTIONS={
-            ('P', 'Pending'),
-            ('A', 'Approved'),
-            ('D', 'Denied'),
-        }
+STATUS_OPTIONS={
+      ('P', 'Pending'),
+      ('A', 'Approved'),
+      ('D', 'Denied'),
+}
 
-class ApplicationStatus(models.Model):
+class ApplicationStatus(TimeStampedModel):
 	"""Application status model.
 
 	   i.e. Approved, Pending, Denied, ... """
@@ -139,7 +161,7 @@ class ApplicationStatus(models.Model):
     class Meta:
         verbose_name=_('application status')
        	verbose_name_plural=_('application statuses')
-        ordering=('name',)
+        ordering=('created',)
 
     def __unicode__(self):
-        return u'%s' % self.name
+        return u'Status for %s: %s' % (self.application, self.status)
