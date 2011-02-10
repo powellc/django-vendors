@@ -32,22 +32,22 @@ class ZipCodeField(models.CharField):
         return self.rjust(5, '0')
 
 class VendorType(models.Model):
-	"""Vendor type model.
+    """Vendor type model.
 
-	   What type of vendors do we have?
+     What type of vendors do we have?
 
-	   Produce, Jewelry, Pottery, Meat, Cheese, etc...?"""
+     Produce, Jewelry, Pottery, Meat, Cheese, etc...?"""
 
     name=models.CharField(_('name'), max_length=50)
-	slug=models.SlugField(_('slug'), unique=True)
+    slug=models.SlugField(_('slug'), unique=True)
     
     class Meta:
-		verbose_name=_('vendor type')
-		verbose_name_plural=_('vendor types')
-		ordering=('name',)
+        verbose_name=_('vendor type')
+        verbose_name_plural=_('vendor types')
+        ordering=('name',)
   
     def __unicode__(self):
-		return u'%s' % self.name
+        return u'%s' % self.name
 
 class Vendor(TimeStampedModel):
     """Vendor model."""
@@ -104,16 +104,16 @@ class Vendor(TimeStampedModel):
         return self.get_next_by_name(public=True)
 
 class ApplicationStatus(models.Model):
-	"""Application status model.
+    """Application status model.
 
-	   i.e. Approved, Pending, Denied, ... """
+    i.e. Approved, Pending, Denied, ... """
 
     name=models.CharField(_('name'), max_length=50)
     slug=models.SlugField(_('slug'), unique=True)
     
     class Meta:
         verbose_name=_('application status')
-       	verbose_name_plural=_('application statuses')
+        verbose_name_plural=_('application statuses')
         ordering=('name',)
   
     def __unicode__(self):
@@ -125,15 +125,15 @@ class Application(TimeStampedModel):
     submission_date=DateTimeField(default=datetime.now())
     approval_date=DateTimeField(blank=True, null=True)
 
-	class Meta:
+   class Meta:
         verbose_name=_('application')
         verbose_name_plural=_('applications')
         ordering=('vendor', 'submission_date',)
         get_latest_by='created'
-		
-	def __unicode__(self):
+    
+    def __unicode__(self):
         return u'%s %s application' % (self.vendor, self.submission_date.year)
 
-	def get_absolute_url(self):
+    def get_absolute_url(self):
         args=[self.vendor.slug]
         return reverse('vendor_application_detail', args=args)
