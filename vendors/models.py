@@ -107,6 +107,6 @@ class Application(TimeStampedModel):
     def get_absolute_url(self):
         return ('application_detail', (), {'slug': self.vendor.slug, 'year': self.submission_date.year})
 
-	def __unicode__(self):
+    def __unicode__(self):
         return u'%s application for %s' % (self.submission_date.year, self.vendor)
 
