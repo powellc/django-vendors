@@ -15,16 +15,18 @@ class PublicManager(models.Manager):
 
 class VendorType(TitleSlugDescriptionModel):
     """Vendor type model.
-
+    
      What type of vendors do we have?
-
+    
      Produce, Jewelry, Pottery, Meat, Cheese, etc...?"""
-
+    
+    craft=models.BooleanField(_('Craft'), default=False)
+    
     class Meta:
         verbose_name=_('vendor type')
         verbose_name_plural=_('vendor types')
         ordering=('title',)
-  
+    
     def __unicode__(self):
         return u'%s' % self.title.
 
@@ -58,11 +60,10 @@ class Vendor(TitleSlugDescriptionModel, USAddressPhoneModel, TimeStampedModel):
         ''' Return a string representing the state of the current year's application.'''
         try:
             app = Application.objects.get(vendor=self, year=datetime.now().year)
-            status=app.get_status_display()
+            return app.get_status_display()
         except:
-            status='No application found for %s' % (datetime.now().year)
-        return status
-
+            return 'No application found for %s' % (datetime.now().year)
+    
     @property
     def in_order(self):
         ''' Is everything in order for this vendor to sell this year? '''
@@ -71,10 +72,12 @@ class Vendor(TitleSlugDescriptionModel, USAddressPhoneModel, TimeStampedModel):
     @models.permalink
     def get_absolute_url(self):
         return ('vendor_detail', (), {'slug': self.slug})
-
+        
+    @property
     def get_previous_vendor(self):
         return self.get_previous_by_name(public=True)
-
+    
+    @property
     def get_next_vendor(self):
         return self.get_next_by_name(public=True)
 
@@ -89,7 +92,7 @@ class Application(TimeStampedModel):
             (PENDING_STATUS, 'Pending'),
     )
     vendor=models.ForeignKey(Vendor)
-    status=models.IntegerField(_('Status'), max_length=1, choices=APP_STATUSES, default=2)
+    status=models.IntegerField(_('Status'), max_length=1, choices=APP_STATUSES, default=PENDING_STATUS)
     submission_date=DateTimeField(_('Submission date'), default=datetime.now(), editable=False)
     approval_date=DateTimeField(_('Approval date'), blank=True, null=True)
     notes=modes.TextField(_('Notes'), blank=True, null=True)
@@ -98,12 +101,12 @@ class Application(TimeStampedModel):
         verbose_name = _('application')
         verbose_name_plural = _('applications')
         ordering = ('vendor', 'submission_date',)
-        get_latest_by='created'
+        get_latest_by='submission_date'
 
     @models.permalink
     def get_absolute_url(self):
         return ('application_detail', (), {'slug': self.vendor.slug, 'year': self.submission_date.year})
-    
-    def __unicode__(self):
-        return u'%s %s application' % (self.vendor, self.submission_date.year)
+
+	def __unicode__(self):
+        return u'%s application for %s' % (self.submission_date.year, self.vendor)
 

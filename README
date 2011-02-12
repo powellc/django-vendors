@@ -14,8 +14,11 @@ One part of the app requires django-schedule to work propertly. This can be circ
 
 Each vendor can sign up for an "Event," which is supposed to be a market day, but could be anything.
 
+Flow
+------
+New vendor -> register for account -> create application
 
-Flows:
+Admin -> vets info -> approves/declines application
 
 New vendor
 1. Vendor registers for an account

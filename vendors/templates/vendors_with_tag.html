@@ -1,0 +1,49 @@
+{% extends "vendors/base.html" %}
+{% load markup typogrify comments humanize blog %}
+
+{% block body_class %}{{ block.super }} vendor_index{% endblock %}
+
+{% block content %}
+    <h1>{% block content_title %}{{vendor.name}}{% endblock %}</h1>
+    <div id="vendor" >
+	<div id="vendor-info" >
+   	  <p>{{vendor.owner.name}}</p>
+          <p>{{vendor.address}}</p>
+          <p>{{vendor.town}}, {{vendor.state}} {{vendor.zipcode}}</p>
+
+	</div>
+	<div id="vendor-desc" >
+	  {{vendor.description|typogrify|markdown}}
+	</div>
+	<div id="nav">
+	  {% if vendor.get_previous_vendor %}<a href="{{vendor.get_previous_vendor.get_absolute_url}}">Previous</a>{% endif %}
+  	  {% if vendor.get_next_vendor %}<a href="{{vendor.get_next_vendor.get_absolute_url}}">Next</a>{% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+
+{% load blog tagging_tags %}
+{% block sidebar %}
+  <h1>Contact</h1>
+  <ul>
+    <li>Phone: {{vendor.phone}}</li>
+    <li>Email: <a href="mailto:{{vendor.email}}">{{vendor.email}}</a></li>
+  </ul>
+
+  <h1>Products</h1>
+  {% tags_for_object vendor as tag_list %}
+  <ul>
+    {% for tag in tag_list %}
+    <li>{{tag}}</li>
+    {% endfor %}
+  </ul>
+
+  {% get_latest_posts 10 as latest_post_list %}
+  <h1>News</h1>
+  <ul>
+    {% for post in latest_post_list %}
+	<li><a href="{{ post.get_absolute_url }}" title="{{post.title}}">{{post.title}}</a> &mdash; <span class="alt">{{post.publish|date:"M j"}}</span></li>
+	{% endfor %}
+  </ul>
+{% endblock %}

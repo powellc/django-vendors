@@ -1,16 +1,20 @@
 import django.forms as forms
-from django.forms import ModelForm
 from vendors.models import Vendor
-from schedule.models import Calendar, Event
-from tagging.fields import TagField
 from django.db.models import TextField
 
-class VendorForm(ModelForm):
+class VendorForm(forms.ModelForm):
     class Meta:
         model=Vendor
-        exclude=('public','owner', 'markets', 'slug','lat_long')
+        exclude=('public','owner', 'markets', 'slug',)
+
+    def save(self, commit=True):
+        f = super(VendorForm, self).save(commit=False)
+        if not f.pk: f.owner = request.user
+        if commit: f.save()
+        return f
+                                                                
         
-class MarketSignUpForm(ModelForm):
+class MarketSignUpForm(forms.ModelForm):
     #cal = Calendar.objects.get(slug__exact='castine-farmers-market')
     #markets = forms.ModelMultipleChoiceField(cal.events.all(), widget=forms.CheckboxSelectMultiple())
     

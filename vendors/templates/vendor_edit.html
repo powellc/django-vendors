@@ -1,0 +1,14 @@
+{% extends "vendors/base.html" %}
+
+{% block title %}Edit your profile{% endblock %}
+
+{% block content %}
+    <h1>{% block content_title %}Edit your vendor profile.{% endblock %}</h1>
+    <form method="POST" action="">
+    <table>
+        {{form.as_table}}
+    </table>
+        <p>For your products, please enter a list of items separated by commas. Please be as specific as you can too.</p>
+    <input type="submit" value="Update profile" /> or <a href="{% url vendor_detail instance.slug %}" title="{{instance.name}}">cancel</a>
+    </form>
+{% endblock %}
