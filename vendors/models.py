@@ -95,7 +95,9 @@ class Application(TimeStampedModel):
     status=models.IntegerField(_('Status'), max_length=1, choices=APP_STATUSES, default=PENDING_STATUS)
     submission_date=DateTimeField(_('Submission date'), default=datetime.now(), editable=False)
     approval_date=DateTimeField(_('Approval date'), blank=True, null=True)
-    notes=modes.TextField(_('Notes'), blank=True, null=True)
+    added_products=models.TextField(_('Added products'), blank=True, null=True)
+    removed_products=models.TextField(_('Added products'), blank=True, null=True)
+    extra_notes=modes.TextField(_('Extra notes'), blank=True, null=True)
 
     class Meta:
         verbose_name = _('application')

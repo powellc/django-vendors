@@ -14,40 +14,28 @@ from django.conf import settings
 from vendors.models import Vendor, Application, VendorType, A
 from vendors.forms import VendorForm, MarketSignUpForm
 
-def vendor_list(request):
-    vendors=get_list_or_404(Vendor, public=True)
-    return object_list(request, queryset=vendors)
-
 def vendor_detail(request, slug):
-    if request.user.is_authenticated(): # If this user has an account, let them at it
-        qs=Vendor.objects.all()
+    if request.user.is_authenticated(): # If this user has an account that matches the vendor, let them at it
+        vendor = get_object_or_404(Vendor, slug=slug)
+        if vendor.owner == request.user:
+            qs=Vendor.objects.all()
+        else:
+        qs=Vendor.public.all()
     else:
         qs=Vendor.public.all()
-
     return object_detail(request, queryset=qs, slug=slug,
                          extra_content={'google_api_key': settings.GOOGLE_API_KEY})
 
-def vendor_create(request):
-    return create_object(request, form_class=VendorForm, login_required=True)
 
 @login_required
-def vendor_edit(request, slug):
-    vendor = None
-    if slug is not None:
-        vendor = get_object_or_404(slug__exact=slug, owner=request.user)
-    if request.method == 'POST':
-        form=VendorForm(request.POST, instance=vendor)
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('vendor_detail', args=[vendor.slug]))
+def vendor_application_list(request, slug):
+    vendor = get_object_or_404(Vendor, slug=slug)
+    if request.user == vendor.owner:
+        return object_list(request, queryset=Application.objects.filter(vendor=vendor))
     else:
-        form = VendorForm(instance=vendor)
-        
-    return render_to_response('vendors/vendor_edit.html', locals(),
-                              context_instance=RequestContext(request))
+        raise Http404
 
-    '''
-@login_required
+'''@login_required
 def vendor_signup(request, slug):
     if slug is not None:
         instance = Vendor.objects.get(slug__exact=slug)
@@ -63,15 +51,3 @@ def vendor_signup(request, slug):
     return render_to_response('vendors/vendor_signup.html', locals(),
                               context_instance=RequestContext(request))
                               '''
-
-@login_required
-def application_create(request):
-    form=ApplicationForm(request.POST or None)
-    if form.is_valid():
-        application=form.save(commit=False)
-        application.status=ApplicationStatus.objects.get(slug='created')
-        application.save()
-        return HttpResponseRedirect(reverse('application_detail', args=[application.vendor.slug]))
-
-    return render_to_response('vendors/application_create.html', locals(),
-                                context_instance=RequestContext(request))
