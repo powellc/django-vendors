@@ -14,3 +14,14 @@ One part of the app requires django-schedule to work propertly. This can be circ
 
 Each vendor can sign up for an "Event," which is supposed to be a market day, but could be anything.
 
+
+Flows:
+
+New vendor
+1. Vendor registers for an account
+2. Vendor fills in their profile info
+3. Vendor submits an application
+4a. Committee recieves application via email
+4b. Vendor recieves a "Thanks for applying" email with instructions to check the status
+5. 
+

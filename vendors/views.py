@@ -19,41 +19,23 @@ def vendor_index(request):
 
 def vendor_detail(request, slug):
     if request.user.is_authenticated():
-	try:
-       	    vendor=Vendor.objects.get(slug__exact=slug)
+    try:
+            vendor=Vendor.objects.get(slug__exact=slug)
         except:
- 	    raise Http404
+        raise Http404
     else:
         try:
             vendor=Vendor.public_objects.get(slug__exact=slug)
         except:
             raise Http404
 
-    if request.META['SERVER_NAME']=='castinefarmersmarket.org':
-        google_api_key=settings.GOOGLE_API_KEY_CFM
-    elif request.META['SERVER_NAME']=='castinefm.org':
-        google_api_key=settings.GOOGLE_API_KEY_FM
-    else:
-        google_api_key=''
+    google_api_key=settings.GOOGLE_API_KEY
 
     return render_to_response('vendors/vendor_detail.html', locals(),
                               context_instance=RequestContext(request))
 
-#def vendor_tags(request):
-#    return render_to_response('vendors/vendor_tag_list.html', locals(),
-#                              context_instance=RequestContext(request))
-
-#def vendors_with_tag(request, tag, object_id=None, page=1):
-#    query_tag = Tag.objects.get(name=tag)
-#    vendors = TaggedItem.objects.get_by_model(Vendor, tag)
-#    vendors = vendors.order_by('name')
-#    return render_to_response('vendors/vendors_with_tag.html', locals(),
-#                              context_instance=RequestContext(request))
-
-
-
 @login_required
-def vendor_create(request):
+def vendor_signup(request):
     form=VendorForm(request.POST or None)
     if form.is_valid():
         vendor=form.save(commit=False)
@@ -62,7 +44,7 @@ def vendor_create(request):
         vendor.save()
         return HttpResponseRedirect(reverse('vendor_detail', args=[vendor.slug]))
         
-    return render_to_response('vendors/vendor_create.html', locals(),
+    return render_to_response('vendors/vendor_signup.html', locals(),
                               context_instance=RequestContext(request))
 
 @login_required
@@ -84,6 +66,7 @@ def vendor_edit(request, slug):
     return render_to_response('vendors/vendor_edit.html', locals(),
                               context_instance=RequestContext(request))
 
+    '''
 @login_required
 def vendor_signup(request, slug):
     if slug is not None:
@@ -99,13 +82,16 @@ def vendor_signup(request, slug):
         
     return render_to_response('vendors/vendor_signup.html', locals(),
                               context_instance=RequestContext(request))
+                              '''
 
 @login_required
-def vendor_app_create(request):
-	form=VendorAppForm(request.POST or None)
-	if form.is_valid():
-		application=form.sav(commit=False)
-		return HttpResponseRedirect(reverse('vendor_app_detail', args=[application.vendor.slug]))
+def application_create(request):
+    form=ApplicationForm(request.POST or None)
+    if form.is_valid():
+        application=form.save(commit=False)
+            vendor.slug=slugify(vendor.name)
+            vendor.save()
+        return HttpResponseRedirect(reverse('application_detail', args=[application.vendor.slug]))
 
-	return render_to_response('vendors/vendor_app_create.html', locals(),
-								context_instance=RequestContext(request))
+    return render_to_response('vendors/application_create.html', locals(),
+                                context_instance=RequestContext(request))

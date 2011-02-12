@@ -1,139 +1,109 @@
 from datetime import datetime
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
-from tagging.fields import TagField
-from django.contrib.localflavor.us.models import PhoneNumberField, USStateField 
-from django_extensions.db.models import TimeStampedModel
-from schedule.models import Event
-import tagging
+from django_extensions.db.models import TimeStampedModel, TitleSlugDescriptionModel
+from myutils.utils import google_lat_long
+from myutils.fields import ZipCodeField, USAddressPhoneModel
 import urllib
 import settings
-
-def get_lat_long(location):
-    key = settings.GOOGLE_API_KEY_CFM
-    output = "csv"
-    location = urllib.quote_plus(location)
-    request = "http://maps.google.com/maps/geo?q=%s&output=%s&key=%s" % (location, output, key)
-    data = urllib.urlopen(request).read()
-    dlist = data.split(',')
-    if dlist[0] == '200':
-        return "%s, %s" % (dlist[2], dlist[3])
-    else:
-        return ''
+from taggit.managers import TaggableManager
 
 class PublicManager(models.Manager):
     def get_query_set(self):
         return super(PublicManager, self).get_query_set().filter(public=True)
 
-class ZipCodeField(models.CharField):
-    def __unicode__(self):
-        return self.rjust(5, '0')
-
-class VendorType(models.Model):
+class VendorType(TitleSlugDescriptionModel):
     """Vendor type model.
 
      What type of vendors do we have?
 
      Produce, Jewelry, Pottery, Meat, Cheese, etc...?"""
 
-    name=models.CharField(_('name'), max_length=50)
-    slug=models.SlugField(_('slug'), unique=True)
-    
     class Meta:
         verbose_name=_('vendor type')
         verbose_name_plural=_('vendor types')
-        ordering=('name',)
+        ordering=('title',)
   
     def __unicode__(self):
-        return u'%s' % self.name
+        return u'%s' % self.title.
 
-class Vendor(TimeStampedModel):
+class Vendor(TitleSlugDescriptionModel, USAddressPhoneModel, TimeStampedModel):
     """Vendor model."""
-    name=models.CharField(_('title'), max_length=100)
-    slug=models.SlugField(_('slug'), unique=True)
     owner=models.ForeignKey(User, related_name='vendor_owner')
     email=models.EmailField(_('email'), unique=True)
-    phone=PhoneNumberField(_('phone'), blank=True, null=True)
     url=models.URLField(_('website'), blank=True, null=True)
-    address=models.CharField(_('address'), max_length=255)
-    town=models.CharField(_('town'), max_length=100)
-    state=USStateField(_('state'))
-    zipcode=ZipCodeField(_('zip'), max_length=5)
-    description=models.TextField()
-    products=TagField()
     type=models.ManyToManyField(VendorType)
     markets=models.ManyToManyField(Event, null=True, blank=True)
     public=models.BooleanField(_('public'), default=False)
-    lat_long=models.CharField(_('coordinates'), max_length=255)
     committee_member=models.BooleanField(_('committee member'), default=False)
     insurance_on_file=models.BooleanField(_('insurance on file'), default=False)
     signed_bylaws=models.BooleanField(_('signed bylaws'), default=False)
-    
+    products=TaggableManager()
+
     objects=models.Manager()
-    public_objects=PublicManager()
+    public=PublicManager()
     
     class Meta:
         verbose_name = _('vendor')
         verbose_name_plural = _('vendors')
-        ordering = ('name',)
+        ordering = ('title',)
         get_latest_by='created'
         
-    def save(self):
-        if not self.lat_long:
-            location = "%s +%s +%s +%s" % (self.address, self.town, self.state, self.zipcode)
-            self.lat_long = get_lat_long(location)
-            if not self.lat_long:
-                location = "%s +%s +%s" % (self.town, self.state, self.zipcode)
-                self.lat_long = get_lat_long(location)
-        
-        super(Vendor, self).save()
-        
     def __unicode__(self):
-        return u'%s in %s' % (self.name, self.town)
+        return u'%s in %s' % (self.title, self.town)
         
+    @property
+    def status(self):
+        ''' Return a string representing the state of the current year's application.'''
+        try:
+            app = Application.objects.get(vendor=self, year=datetime.now().year)
+            status=app.get_status_display()
+        except:
+            status='No application found for %s' % (datetime.now().year)
+        return status
+
+    @property
+    def in_order(self):
+        ''' Is everything in order for this vendor to sell this year? '''
+        return self.signed_bylaws && self.insurance_on_file && (self.status()=='Approved')
+
+    @models.permalink
     def get_absolute_url(self):
-        args=[self.slug]
-        return reverse('vendor_detail', args=args)
-        
+        return ('vendor_detail', (), {'slug': self.slug})
+
     def get_previous_vendor(self):
         return self.get_previous_by_name(public=True)
 
     def get_next_vendor(self):
         return self.get_next_by_name(public=True)
 
-class ApplicationStatus(models.Model):
-    """Application status model.
-
-    i.e. Approved, Pending, Denied, ... """
-
-    name=models.CharField(_('name'), max_length=50)
-    slug=models.SlugField(_('slug'), unique=True)
-    
-    class Meta:
-        verbose_name=_('application status')
-        verbose_name_plural=_('application statuses')
-        ordering=('name',)
-  
-    def __unicode__(self):
-        return u'%s' % self.name
-
 class Application(TimeStampedModel):
-    vendor=models.ForeignKey(Vendor)
-    status=models.ForeignKey(ApplicationStatus)
-    submission_date=DateTimeField(default=datetime.now())
-    approval_date=DateTimeField(blank=True, null=True)
+    DENIED_STATUS = 0
+    APPROVED_STATUS = 1
+    PENDING_STATUS = 2
 
-   class Meta:
-        verbose_name=_('application')
-        verbose_name_plural=_('applications')
-        ordering=('vendor', 'submission_date',)
+    APP_STATUSES=(
+            (DENIED_STATUS, 'Denied'),
+            (APPROVED_STATUS, 'Approved'),
+            (PENDING_STATUS, 'Pending'),
+    )
+    vendor=models.ForeignKey(Vendor)
+    status=models.IntegerField(_('Status'), max_length=1, choices=APP_STATUSES, default=2)
+    submission_date=DateTimeField(_('Submission date'), default=datetime.now(), editable=False)
+    approval_date=DateTimeField(_('Approval date'), blank=True, null=True)
+    notes=modes.TextField(_('Notes'), blank=True, null=True)
+
+    class Meta:
+        verbose_name = _('application')
+        verbose_name_plural = _('applications')
+        ordering = ('vendor', 'submission_date',)
         get_latest_by='created'
+
+    @models.permalink
+    def get_absolute_url(self):
+        return ('application_detail', (), {'slug': self.vendor.slug, 'year': self.submission_date.year})
     
     def __unicode__(self):
         return u'%s %s application' % (self.vendor, self.submission_date.year)
 
-    def get_absolute_url(self):
-        args=[self.vendor.slug]
-        return reverse('vendor_application_detail', args=args)
