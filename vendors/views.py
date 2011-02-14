@@ -11,7 +11,7 @@ from django.core.urlresolvers import reverse
 from django.template.defaultfilters import slugify
 from django.conf import settings
 
-from vendors.models import Vendor, Application, VendorType, A
+from vendors.models import Vendor, Application, VendorType
 from vendors.forms import VendorForm, MarketSignUpForm
 
 def vendor_detail(request, slug):
@@ -20,11 +20,14 @@ def vendor_detail(request, slug):
         if vendor.owner == request.user:
             qs=Vendor.objects.all()
         else:
-        qs=Vendor.public.all()
+            qs=Vendor.public_objects.all()
     else:
-        qs=Vendor.public.all()
-    return object_detail(request, queryset=qs, slug=slug,
-                         extra_content={'google_api_key': settings.GOOGLE_API_KEY})
+        qs=Vendor.public_objects.all()
+    try:
+        key=settings.GOOGLE_API_KEY
+    except:
+        key=''
+    return object_detail(request, queryset=qs, slug=slug, extra_context={'google_api_key': key})
 
 
 @login_required
