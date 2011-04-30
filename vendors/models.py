@@ -3,8 +3,10 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 from django_extensions.db.models import TimeStampedModel, TitleSlugDescriptionModel
+from django_extensions.db.fields import AutoSlugField
 from myutils.utils import google_lat_long
 from myutils.models import RandomIDMixin, USAddressPhoneMixin
+from django.core.exceptions import ValidationError
 import urllib
 import settings
 
@@ -12,6 +14,8 @@ from taggit.managers import TaggableManager
 from vendors.managers import PublicManager
 from schedule.models import Event
 from photologue.models import ImageModel
+
+class NoActiveMarketSeason(ValidationError): pass
 
 class VendorPhoto(ImageModel, RandomIDMixin, TimeStampedModel):
     """Vendor photo model.
@@ -158,6 +162,36 @@ class Requirement(models.Model):
             
         return changed
 
+class MarketSeason(USAddressPhoneMixin, TimeStampedModel):
+    year=models.IntegerField(_('Year'), max_length=4)
+    title=models.CharField(_('Title'), max_length=144, help_text='A simple title such as Spring, Winter or whatever.')
+    slug=AutoSlugField(_('Slug'), populate_from=('year','title'))
+    active=models.BooleanField(_('Active'), default=False)
+
+    class Meta:
+        verbose_name = _('Market season')
+        verbose_name_plural = _('Market seasons')
+        ordering = ('year', 'title',)
+        get_latest_by='-year'
+
+    @models.permalink
+    def get_absolute_url(self):
+        return ('market_season_detail', (), {'slug': self.slug, 'year': self.year})
+
+    def __unicode__(self):
+        return u'%s %s season' % (self.title, self.year)
+    
+    def save(self, *args, **kwargs):
+        """ Ensure there is only one active season"""
+        if self.active:
+            MarketSeason.objects.exclude(id=self.id).update(active=False)
+        
+        else:
+            if not MarketSeason.objects.exclude(id=self.id).filter(active=True):
+                raise NoActiveMarketSeason('One of the market seasons must be marked active')
+
+        super(MarketSeason ,self).save(*args, **kwargs)
+            
 
 class Application(TimeStampedModel):
     DENIED_STATUS = 0
@@ -170,6 +204,7 @@ class Application(TimeStampedModel):
             (PENDING_STATUS, 'Pending'),
     )
     vendor=models.ForeignKey(Vendor)
+    season=models.ForeignKey(MarketSeason)
     status=models.IntegerField(_('Status'), max_length=1, choices=APP_STATUSES, default=PENDING_STATUS)
     submission_date=models.DateTimeField(_('Submission date'), default=datetime.now(), editable=False)
     approval_date=models.DateTimeField(_('Approval date'), blank=True, null=True)
@@ -188,7 +223,7 @@ class Application(TimeStampedModel):
         return ('application_detail', (), {'slug': self.vendor.slug, 'year': self.submission_date.year})
 
     def __unicode__(self):
-        return u'%s application for %s' % (self.submission_date.year, self.vendor)
+        return u'%s application for %s' % (self.season.year, self.vendor)
 
     def save(self, *args, **kwargs):
         super(Application, self).save(*args, **kwargs)
@@ -197,7 +232,7 @@ class Application(TimeStampedModel):
 
         if require_save:
             super(Application, self).save()
-            
+
     def do_set_reqs(self):
         changed=True
         active_reqs = Requirement.objects.filter(active=True)

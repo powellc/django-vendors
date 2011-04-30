@@ -1,4 +1,4 @@
-from vendors.models import Vendor, Application, VendorType, VendorPhoto, Requirement, AppRequirement
+from vendors.models import Vendor, Application, VendorType, VendorPhoto, Requirement, AppRequirement, MarketSeason
 from django.contrib import admin
 
 class VendorAdmin(admin.ModelAdmin):
@@ -21,3 +21,4 @@ admin.site.register(VendorType)
 admin.site.register(VendorPhoto)
 admin.site.register(Requirement)
 admin.site.register(AppRequirement)
+admin.site.register(MarketSeason)
