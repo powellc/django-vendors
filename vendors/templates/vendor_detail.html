@@ -1,5 +1,7 @@
 {% extends "vendors/base.html" %}
-{% load markup typogrify comments humanize blog %}
+{% load typogrify humanize %}
+
+{% block title %}{{vendor.name}} at {% endblock %}
 
 {% if google_api_key %}
   {% block extra_headers %}
@@ -22,41 +24,43 @@
   {% endblock %}
 {% endif %}
 
-{% block body_class %}{{ block.super }} vendor_index{% endblock %}
+{% block body_class %}{{ block.super }}vendor_index{% endblock %}
 {% block body_extras %}onload="initialize()" onunload="GUnload()"{% endblock %}
 
 {% block content %}
-    <h1>{% block content_title %}{{vendor.name}}{% endblock %}</h1>
-    <div id="vendor" >
+<h2>{{vendor.name}}</h2>
+<h3>{{vendor.type}}</h3>
+<div id="vendor" >
 	<div id="vendor-info" >
    	  <p>{{vendor.owner.name}}</p>
           <p>{{vendor.address}}</p>
           <p>{{vendor.town}}, {{vendor.state}} {{vendor.zipcode}}</p>
 	</div>
 	<div id="vendor-desc" >
-	  {{vendor.description|typogrify|markdown}}
+	  {{vendor.rendered_description}}
 	</div>
 	
-        {% if google_api_key %}
-  	  <p id="map_canvas" style="width: 460px; height: 300px; "></p>
-	  <div class="small">Note: We try to get a map dynamically from the address provided, but Google's not great. Let us know if the map comes up wrong.</div>
-        {% endif %}
+    {% if google_api_key %}
+	<p id="map_canvas" style="width: 460px; height: 300px; "></p>
+	<div class="small">Note: We try to get a map dynamically from the address provided, but Google's not great. Let us know if the map comes up wrong.</div>
+    {% endif %}
     
 	
     {% if user.is_authenticated %}
         {% ifequal vendor.owner user %}
-            <p class="end"><a href="{% url vendor_edit vendor.slug %}" title="Edit {{vendor}}">Edit your information</a></p>
+            <p class="end"><a href="{% url vendor_edit vendor.slug %}" title="Edit {{vendor}}">Edit your profile</a></p>
         {% endifequal %}
     {% endif %}
+
 	<div id="nav">
 	  {% if vendor.get_previous_vendor %}<a href="{{vendor.get_previous_vendor.get_absolute_url}}">Previous</a>{% endif %}
   	  {% if vendor.get_next_vendor %}<a href="{{vendor.get_next_vendor.get_absolute_url}}">Next</a>{% endif %}
     </div>
-    </div> <!-- End of div#vendor -->
+</div> <!-- End of div#vendor -->
 {% endblock %}
 
 
-{% load blog tagging_tags %}
+{% load article_tags %}
 {% block sidebar %}
   <h1>Contact</h1>
   <ul>
@@ -73,13 +77,7 @@
     {% endfor %}
   </ul>
   
-  {% if vendor.markets.latest %}
-  <h1>Next market</h1>
-    <p>{{vendor.name}} will be there on {{vendor.markets.latest.start|date:"l, F j @ P"}}.</p>
-  {% endif %}
-    
-
-  {% get_latest_posts 10 as latest_post_list %}
+  {% get_articles 10 as latest_post_list %}
   <h1>News</h1>
   <ul>
     {% for post in latest_post_list %}
