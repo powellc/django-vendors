@@ -4,15 +4,14 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 from django_extensions.db.models import TimeStampedModel, TitleSlugDescriptionModel
 from django_extensions.db.fields import AutoSlugField
-from myutils.utils import google_lat_long
-from myutils.models import RandomIDMixin, USAddressPhoneMixin
+from onec_utils.models import RandomIDMixin, USAddressPhoneMixin
 from django.core.exceptions import ValidationError
 import urllib
 import settings
 
+from uuidfield import UUIDField
 from taggit.managers import TaggableManager
 from vendors.managers import PublicManager
-from schedule.models import Event
 from photologue.models import ImageModel
 
 class NoActiveMarketSeason(ValidationError): pass
@@ -41,15 +40,13 @@ class VendorPhoto(ImageModel, RandomIDMixin, TimeStampedModel):
     def get_absolute_url(self):
         # example.com/vendors/goodtime-farm/photos/23ra2f9a
         return ('vendor_photo_detail', (), {'slug': self.vendor.slug, 'id': self.id})
-        
 
 class VendorType(TitleSlugDescriptionModel):
     """Vendor type model.
-     
-    What type of vendors do we have?
-     
+    What type of vendors do we have? Primary business, only.
+
     Produce, Jewelry, Pottery, Meat, Cheese, etc...?"""
-     
+
     crafter=models.BooleanField(_('Crafter'), default=False)
      
     class Meta:
@@ -65,8 +62,7 @@ class Vendor(TitleSlugDescriptionModel, USAddressPhoneMixin, TimeStampedModel):
     owner=models.ForeignKey(User, related_name='vendor_owner')
     email=models.EmailField(_('email'), unique=True)
     url=models.URLField(_('website'), blank=True, null=True)
-    type=models.ManyToManyField(VendorType)
-    markets=models.ManyToManyField(Event, null=True, blank=True)
+    vtype=models.ManyToManyField(VendorType)
     public=models.BooleanField(_('Public'), default=False)
     committee_member=models.BooleanField(_('committee member'), default=False)
     products=TaggableManager()
@@ -123,7 +119,8 @@ class Vendor(TitleSlugDescriptionModel, USAddressPhoneMixin, TimeStampedModel):
 class Requirement(models.Model):
     """Requirement model.
 
-    A model that allows markets to set requirements for a vendor to complete before they are approved.
+    A model that allows markets to set requirements for a vendor to complete
+    before an application is accepted.
 
     i.e. insurance on file?, bylaws signed?
     """
@@ -162,11 +159,38 @@ class Requirement(models.Model):
             
         return changed
 
+class MarketLocation(USAddressPhoneMixin, TimeStampedModel):
+    """Market Location model.
+
+    Manages the locations of a market, including the date and time the market
+    is open at that location.
+    """
+    slug=AutoSlugField(_('Slug'), populate_from=('days'))
+    days=models.CharField(_('Days'), max_length=255, blank=True, null=True)
+    hours=models.CharField(_('Hours'), max_length=100, blank=True, null=True)
+    first_day=models.DateField(_('First day')
+    last_day=models.DateField(_('Last day', blank=True, null=True)
+
+    class Meta:
+        verbose_name = _('Market location')
+        verbose_name_plural=_('Market locations')
+
+    @models.permalink
+    def get_absolute_url(self):
+        return ('market_location_detail', (), {'slug': self.slug, 'year': self.year})
+
 class MarketSeason(USAddressPhoneMixin, TimeStampedModel):
+    """Market Season model.
+
+    Manages the season of a market, including location. If the market has
+    multiple locations in a season, you can use the primary one for the season
+    and add a MarketLocation with details.
+    """
     year=models.IntegerField(_('Year'), max_length=4)
     title=models.CharField(_('Title'), max_length=144, help_text='A simple title such as Spring, Winter or whatever.')
     slug=AutoSlugField(_('Slug'), populate_from=('year','title'))
     active=models.BooleanField(_('Active'), default=False)
+    locations = models.ForeignKey(MarketLocation)
 
     class Meta:
         verbose_name = _('Market season')
@@ -205,6 +229,7 @@ class Application(TimeStampedModel):
     )
     vendor=models.ForeignKey(Vendor)
     season=models.ForeignKey(MarketSeason)
+    location=models.ForeignKey(MarketLocation, blank=True, null=True)
     status=models.IntegerField(_('Status'), max_length=1, choices=APP_STATUSES, default=PENDING_STATUS)
     submission_date=models.DateTimeField(_('Submission date'), default=datetime.now(), editable=False)
     approval_date=models.DateTimeField(_('Approval date'), blank=True, null=True)
