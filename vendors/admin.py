@@ -1,4 +1,4 @@
-from vendors.models import Vendor, Application, VendorType, VendorPhoto, Requirement, AppRequirement, MarketSeason
+from vendors.models import *
 from django.contrib import admin
 
 class VendorAdmin(admin.ModelAdmin):
@@ -16,9 +16,14 @@ class ApplicationAdmin(admin.ModelAdmin):
     ordering = ['-submission_date']
     date_hierarchy='submission_date'
     
+class AppReqAdmin(admin.ModelAdmin):
+    list_display = ['app', 'req', 'complete']
+    list_filter = ['app', 'req']
+    
+admin.site.register(AppRequirement, AppReqAdmin)
 admin.site.register(Application, ApplicationAdmin)
 admin.site.register(VendorType)
 admin.site.register(VendorPhoto)
 admin.site.register(Requirement)
-admin.site.register(AppRequirement)
 admin.site.register(MarketSeason)
+admin.site.register(MarketLocation)

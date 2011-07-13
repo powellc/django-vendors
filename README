@@ -1,30 +1,54 @@
-==============
-Django Vendors
-==============
+django-vendors
+===============
 
 Overview
 --------
 
 A django application for managing vendors at a farmer's, or other kind of, market.
 
+Handles most of the common workflows for a market, such as managing vendor
+registrations, making sure all vendors have completed a check list before they
+show up on market day #1, and communicating the status of applications to the
+respective vendors.
+
 Dependencies
 ------------
 
-One part of the app requires django-schedule to work propertly. This can be circumvented quite easily by commenting out the appropriate parts of the models.py and views.py files.
+I build a lot of my projects with reusable apps instead of cobbling together
+the same solution multiple times. Where possible, I try to make sure reasonable
+fallbacks are available instead of requiring yet another dependency.
 
-Each vendor can sign up for an "Event," which is supposed to be a market day, but could be anything.
+* django-registration
+* django-notes
+* django-extensions
+* django-markup-mixin
 
 Flow
 ------
-New vendor -> register for account -> create application
 
-Admin -> vets info -> approves/declines application
+Narrative: When a market is gearing up for the season, the market manager
+adds a new MARKET. The market stipulates a start and end date, possibly a registration
+cut-off date, a location, and a recurrence pattern (every Thurs., for example).
 
-New vendor
+New vendors register for an account on the website and are then prompted to complete 
+an APPLICATION, if there is a MARKET with an open registration period.
+
+Upon completion of the APPLICATION, the market manager is emailed, notifying
+them that someone has submitted an application. They can then review the
+application, print a paper-friendly version of the vendors description of their
+business and desire to be a part of the market. At this stage, the status of
+the application should be changed to "under review".
+
+After reviewing the APPLICATION, a market manager should then update the status
+of the application to either "Accepted" or "Denied." If needed, an explanation
+can be provide with the APPLICATION STATUS change.
+
+Process for a new vendor:
 1. Vendor registers for an account
-2. Vendor fills in their profile info
-3. Vendor submits an application
-4a. Committee recieves application via email
+2. Vendor fills in their profile information
+3. Vendor submits an application for any open markets
+4a. Committee recieves application via email, updates status of application
 4b. Vendor recieves a "Thanks for applying" email with instructions to check the status
-5. 
+5. Committee/manager reviews application, updates status of application
+6. Email sent to vendor announcing status update of application
 

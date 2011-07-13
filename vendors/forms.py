@@ -27,11 +27,3 @@ class ApplicationForm(forms.ModelForm):
         if commit: f.save()
         return f
 
-class MarketSignUpForm(forms.ModelForm):
-    #cal = Calendar.objects.get(slug__exact='castine-farmers-market')
-    #markets = forms.ModelMultipleChoiceField(cal.events.all(), widget=forms.CheckboxSelectMultiple())
-    
-    class Meta:
-        model=Vendor
-        fields=('markets')
-        

@@ -65,6 +65,9 @@ class Vendor(TitleSlugDescriptionModel, USAddressPhoneMixin, TimeStampedModel):
     vtype=models.ManyToManyField(VendorType)
     public=models.BooleanField(_('Public'), default=False)
     committee_member=models.BooleanField(_('committee member'), default=False)
+    logo=models.ImageField(_('Logo'), blank=True, null=True,
+            upload_to='vendors/logos/',
+            help_text='For best effect, keep it simple, as it will be scaled down.')
     products=TaggableManager()
 
     objects=models.Manager()
@@ -106,7 +109,7 @@ class Vendor(TitleSlugDescriptionModel, USAddressPhoneMixin, TimeStampedModel):
 
     @models.permalink
     def get_absolute_url(self):
-        return ('vendor_detail', (), {'slug': self.slug})
+        return ('vendor-detail', (), {'slug': self.slug})
         
     @property
     def get_previous_vendor(self):
@@ -165,11 +168,12 @@ class MarketLocation(USAddressPhoneMixin, TimeStampedModel):
     Manages the locations of a market, including the date and time the market
     is open at that location.
     """
+    name=models.CharField(_('Name'), blank=True, null=True, max_length=255)
     slug=AutoSlugField(_('Slug'), populate_from=('days'))
     days=models.CharField(_('Days'), max_length=255, blank=True, null=True)
     hours=models.CharField(_('Hours'), max_length=100, blank=True, null=True)
-    first_day=models.DateField(_('First day')
-    last_day=models.DateField(_('Last day', blank=True, null=True)
+    first_day=models.DateField(_('First day'))
+    last_day=models.DateField(_('Last day'), blank=True, null=True)
 
     class Meta:
         verbose_name = _('Market location')
@@ -179,7 +183,10 @@ class MarketLocation(USAddressPhoneMixin, TimeStampedModel):
     def get_absolute_url(self):
         return ('market_location_detail', (), {'slug': self.slug, 'year': self.year})
 
-class MarketSeason(USAddressPhoneMixin, TimeStampedModel):
+    def __unicode__(self):
+        return u'%s, %s - starting %s' % (self.days, self.hours, self.first_day)
+
+class MarketSeason(TimeStampedModel):
     """Market Season model.
 
     Manages the season of a market, including location. If the market has
@@ -190,7 +197,8 @@ class MarketSeason(USAddressPhoneMixin, TimeStampedModel):
     title=models.CharField(_('Title'), max_length=144, help_text='A simple title such as Spring, Winter or whatever.')
     slug=AutoSlugField(_('Slug'), populate_from=('year','title'))
     active=models.BooleanField(_('Active'), default=False)
-    locations = models.ForeignKey(MarketLocation)
+    locations = models.ManyToManyField(MarketLocation)
+    open_reg=models.BooleanField(_('Open registration'), default=False)
 
     class Meta:
         verbose_name = _('Market season')

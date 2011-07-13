@@ -1,50 +1,63 @@
 from django.conf.urls.defaults import *
-from vendors import views
+from django.contrib.auth.decorators import login_required 
+
+from django.views.generic import DetailView, ListView
+from django.views.generic.edit import FormView, CreateView, UpdateView, DeleteView
+
 from vendors.models import Vendor
 from vendors.forms import VendorForm, ApplicationForm
+from vendors.views import VendorApplicationList#, AdminApplicationList
 
-from django.views.generic.list_detail import object_list, object_detail
-from django.views.generic.create_update import create_object, update_object, delete_object
-from django.shortcuts import get_list_or_404, get_object_or_404
+urlpatterns = patterns('',
+    url(r'^$', 
+        ListView.as_view(
+            queryset=Vendor.public_objects.all()),
+            name="vendor-list",
+        ),
+    url(r'^(?P<slug>[-\w]+)/$',
+        DetailView.as_view(
+            model=Vendor, 
+            queryset=Vendor.public_objects.all()),
+            name="vendor-detail",
+        ),
+    url(r'^signup/$', 
+        login_required(CreateView.as_view(
+            form_class=VendorForm,)),
+            name="vendor-signup",
+        ), # Signup as a new vendor
+    url(r'^(?P<slug>[-\w]+)/edit/$', 
+        login_required(UpdateView.as_view(
+            model=Vendor,
+            form_class=VendorForm, 
+            slug_field='slug', )),
+            name="vendor-edit",
+        ), # Edit your vendor profile
+    url(r'^(?P<slug>[-\w]+)/delete/$', 
+        login_required(DeleteView.as_view(
+            model=Vendor, )),
+            name="vendor-delete",
+       ), # Delete your vendor profile
 
-''' 
-Custom vendor views
-
-These allow for:
-  * public viewing of vendor profiles
-  * private creation of a new profile
-  * private submission of an application
-  * private checking of application status
-  * private editing of profile
-  * private deletion of profile
-
-The idea here is to wire them all to something like:
-    vendors/
-        <type>/
-        edit/<slug>/
-        delete/<slug>/
-        create/
-        <slug>/
-            applications/
-                edit/<year>
-                delete/<year>
-                create
-                <year>
-
-'''
-urlpatterns = patterns('vendors.views',
-    url(r'^$', object_list, {'queryset': Vendor.public_objects.all()} , name="vendor_list"), # List all public vendors
-    url(r'^(?P<slug>[-\w]+)/$', view=views.vendor_detail, name="vendor_detail"), # Display a vendor profile
-    url(r'^signup/$', create_object, {'form_class':VendorForm, 'login_required':True}, name="vendor_signup"), # Signup as a new vendor
-    url(r'^(?P<slug>[-\w]+)/edit/$', update_object, {'form_class':VendorForm, 'login_required':True, 'slug_field':'slug'}, name="vendor_edit"), # Edit your vendor profile
-    url(r'^(?P<slug>[-\w]+)/delete/$', delete_object, {'model':Vendor, 'post_delete_redirect':'/'}, name="vendor_delete"), # Delete your vendor profile
-    url(r'^(?P<slug>[-\w]+)/applications/$', view=views.vendor_application_list, name="vendor_application_list"), # Display a  list of apps for the vendor <slug>
-    url(r'^(?P<slug>[-\w]+)/applications/new/$', create_object, {'form_class':ApplicationForm, 'login_required':True}, name="application_create"), # Create a new app
-    # NOTE: YOU  HAVE TO MOVE THE TWO BELOW TO THE VIEW FILE, AS YOU HAVE TO LOOK UP BOTH SLUG and YEAR!
-    #url(r'^(?P<slug>[-\w]+)/applications/(?P<year>\d{4})/edit/$', update_object(request, form_class=AppicationForm, login_required=True, slug=slug), name="application_edit"), # Edit an application (not sure if it's a good idea...)
-    #url(r'^(?P<slug>[-\w]+)/applications/(?P<year>\d{4})/delete/$', delete_object(request, Application, slug=slug, post_delete_redirect="/") , name="application_delete"), # Delete an application 
-    #url(r'^(?P<slug>[-\w]+)/applications/(?P<year>\d{4})/$', view=views.application_detail, name="application_detail"), # View an appliction
-    #url(r'^/applications/$', view=views.application_index, name="application_index"), # An admin-only index of all apps submitted
-    # VENDOR TYPES
-    #url(r'^(?P<slug>[-\w]+)/$', view=views.vendor_type_detail, name="vendor_type_detail"), # List all vendors of type <type>
+    # Having to do with applications for vendors
+    #url(r'^(?P<slug>[-\w]+)/applications/$', 
+    #    login_required(VendorApplicationList.as_view(
+    #        name="vendor-application-list",
+    #    ))),
+    url(r'^(?P<slug>[-\w]+)/applications/create/$', 
+        login_required(CreateView.as_view(
+            form_class=ApplicationForm)),
+            name="vendor-application-create",
+        ),
+    #url(r'^(?P<slug>[-\w]+)/applications/(?P<year>\d{4})/$', 
+    #    login_required(VendorApplicationDetail.as_view(
+    #        slug_field='year',)),
+    #        name="vendor-application_detail"), # View an appliction
+    #url(r'^(?P<slug>[-\w]+)/applications/(?P<year>\d{4})/edit/$', 
+    #    login_required(VendorApplicationUpdate.as_view(
+    #        form_class=AppicationForm, 
+    #        slug_field='slug',)),
+    #        name="vendor-application-edit"), # Edit an application (not sure if it's a good idea...)
+    #url(r'^(?P<slug>[-\w]+)/applications/(?P<year>\d{4})/delete/$', 
+    #    login_required(VendorApplicationDelete.as_view()),
+    #        name="vendor-application-delete"), # Delete an application 
 )
